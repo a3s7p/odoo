@@ -47,10 +47,14 @@ pod create --name nginx -v "$NGX_VOLUME" -v "$TLS_VOLUME" nginx:alpine
 
 echo 'Setting up Odoo...'
 
+mkdir -p "/opt/odoo/addons"
+
 ODOO_VOLUME='data-odoo:/var/lib/odoo:rw'
+ODOO_ADDONS='/opt/odoo/addons:/mnt/extra-addons:ro'
 ODOO_CONFIG='/etc/odoo/odoo.conf:/etc/odoo/odoo.conf:ro'
 
 pod run -v "$ODOO_VOLUME" --env-file "$ENVFILE" odoo:18 odoo --no-http --stop-after-init --without-demo=all -d "$POSTGRES_DB" -i base
-pod create --name odoo -v "$ODOO_VOLUME" -v "$ODOO_CONFIG" --env-file "$ENVFILE" odoo:18
+pod create --name odoo -v "$ODOO_VOLUME" -v "$ODOO_ADDONS" -v "$ODOO_CONFIG" --env-file "$ENVFILE" odoo:18
+pod create --name db -v "$PG_VOLUME" --env-file "$ENVFILE" "$PG_IMAGE"
 
 podman pod start app
